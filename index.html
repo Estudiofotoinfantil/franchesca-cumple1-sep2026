@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Franchesca cumple 1 añito 🧚‍♀️</title>
+<meta name="description" content="Invitación al primer cumpleaños de Franchesca — El Bosque Encantado">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Berkshire+Swash&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+/* ============================================================
+   CONFIG VISUAL — paleta bosque encantado / hadas mágicas
+   ============================================================ */
+:root{
+  --verde:       #5FA980;
+  --verde-osc:   #34724E;
+  --lila:        #B79FE0;
+  --lila-osc:    #7C5CB0;
+  --dorado:      #E9C767;
+  --dorado-2:    #F4DE9C;
+  --crema:       #FBF7EC;
+  --crema-2:     #FDFBF4;
+  --noche:       #262147;
+  --noche-2:     #372C63;
+  --texto:       #2E2A45;
+  --sombra: 0 14px 34px rgba(38,33,71,.24);
+  --ff-display: 'Berkshire Swash', cursive;
+  --ff-body: 'Nunito', system-ui, sans-serif;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--crema-2); color:var(--texto);
+  font-family:var(--ff-body); overflow-x:hidden; touch-action:pan-y;
+  max-width:480px; margin-inline:auto; position:relative;
+  box-shadow:0 0 60px rgba(0,0,0,.15);
+}
+img{max-width:100%; display:block;}
+button{font-family:inherit; cursor:pointer; border:none;}
+h1,h2,h3{font-family:var(--ff-display); margin:0; font-weight:400;}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+}
+
+/* ---------- eyebrow "hechizo" (capítulo mágico) ---------- */
+.hechizo{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:var(--ff-body); font-weight:800; font-size:.72rem;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--verde-osc);
+  background:var(--crema); border:1.5px solid var(--dorado);
+  padding:6px 14px; border-radius:999px; margin-bottom:14px;
+}
+.hechizo::before{content:"✨"; font-size:.85rem;}
+
+/* ---------- guirnalda de banderines mágicos ---------- */
+.banderines{ display:flex; width:100%; height:24px; }
+.banderines span{ flex:1; height:100%; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.banderines span:nth-child(4n+1){background:var(--verde);}
+.banderines span:nth-child(4n+2){background:var(--dorado);}
+.banderines span:nth-child(4n+3){background:var(--lila);}
+.banderines span:nth-child(4n){background:var(--crema);}
+
+/* ============================================================
+   1. INTRO — el bosque se abre
+   ============================================================ */
+#intro{
+  position:fixed; inset:0; z-index:999; display:flex; align-items:center; justify-content:center;
+  background:var(--noche); overflow:hidden;
+}
+.hoja{
+  position:absolute; top:0; bottom:0; width:52%; z-index:2;
+  background: linear-gradient(180deg, var(--verde-osc) 0%, var(--noche-2) 100%);
+  box-shadow: 0 0 40px rgba(0,0,0,.5) inset;
+  transition: transform 1.1s cubic-bezier(.77,0,.18,1);
+}
+.hoja::after{
+  content:""; position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(233,199,103,.12), transparent 35%),
+    radial-gradient(circle at 70% 70%, rgba(183,159,224,.15), transparent 40%),
+    linear-gradient(180deg, rgba(255,255,255,.12), transparent 30%);
+}
+.hoja.izq{left:0; border-right:3px solid var(--dorado); border-radius:0 0 40% 0;}
+.hoja.der{right:0; border-left:3px solid var(--dorado); border-radius:0 0 0 40%;}
+#intro.abierta .hoja.izq{transform:translateX(-102%);}
+#intro.abierta .hoja.der{transform:translateX(102%);}
+
+.intro-contenido{ position:relative; z-index:3; text-align:center; padding:0 30px; color:var(--crema-2); }
+.intro-contenido .top{
+  font-family:var(--ff-body); font-weight:700; font-size:.8rem; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--dorado-2); margin-bottom:10px; opacity:0; animation:aparecer .8s .3s ease forwards;
+}
+.intro-contenido h1{
+  font-size:2.9rem; line-height:1.1; color:var(--crema-2);
+  text-shadow:0 4px 18px rgba(0,0,0,.4);
+  opacity:0; animation:aparecer .9s .55s ease forwards;
+}
+.intro-contenido .sub{
+  font-family:var(--ff-body); font-weight:700; font-size:1.02rem; margin-top:10px; color:var(--dorado-2);
+  opacity:0; animation:aparecer .9s .8s ease forwards;
+}
+@keyframes aparecer{ to{opacity:1; transform:none;} from{opacity:0; transform:translateY(12px);} }
+
+#btn-abrir{
+  margin-top:34px; background:var(--dorado); color:var(--noche);
+  font-family:var(--ff-body); font-weight:800; font-size:1rem;
+  padding:15px 30px; border-radius:999px; box-shadow:var(--sombra);
+  opacity:0; animation:aparecer .9s 1.1s ease forwards, pulso 2.2s 2.2s ease-in-out infinite;
+  border:3px solid var(--crema-2);
+}
+@keyframes pulso{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.045);} }
+.polvo-magico{
+  position:absolute; width:520px; height:520px; border-radius:50%; z-index:1;
+  background:radial-gradient(circle, rgba(244,222,156,.22), transparent 60%);
+  animation:girar 10s linear infinite;
+}
+@keyframes girar{ from{transform:rotate(0);} to{transform:rotate(360deg);} }
+
+/* ============================================================
+   2. HERO — bosque encantado ilustrado (sin foto todavía)
+   ============================================================ */
+#hero{
+  position:relative; min-height:560px; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  background:
+    radial-gradient(circle at 15% 12%, rgba(233,199,103,.3), transparent 40%),
+    radial-gradient(circle at 88% 78%, rgba(183,159,224,.35), transparent 50%),
+    linear-gradient(180deg, var(--noche) 0%, var(--noche-2) 100%);
+  padding:60px 26px 50px; text-align:center;
+}
+.luciernagas{ position:absolute; inset:0; z-index:0; }
+.luciernagas span{
+  position:absolute; width:5px; height:5px; background:var(--dorado-2); border-radius:50%;
+  box-shadow:0 0 8px 2px rgba(244,222,156,.7);
+  animation:centellear 2.4s ease-in-out infinite;
+}
+@keyframes centellear{ 0%,100%{opacity:.15;} 50%{opacity:1;} }
+.bosque-ilustracion{ position:relative; z-index:2; width:220px; height:150px; margin:0 auto 18px; }
+.hongo{ position:absolute; bottom:0; }
+.hongo .tallo{ width:14px; height:36px; background:var(--crema-2); border-radius:4px; margin:0 auto; }
+.hongo .sombrero{ width:46px; height:26px; background:linear-gradient(160deg, #E76B8A, #B8446A); border-radius:50% 50% 0 0; margin-bottom:-2px; box-shadow:var(--sombra); }
+.hongo.h1{ left:8px; transform:scale(.8); }
+.hongo.h2{ left:86px; }
+.hongo.h3{ right:8px; transform:scale(.7); }
+.varita{ position:absolute; top:-10px; left:50%; transform:translateX(-50%) rotate(-18deg); font-size:2.4rem; animation:brillarVarita 2s ease-in-out infinite; }
+@keyframes brillarVarita{ 0%,100%{filter:drop-shadow(0 0 2px var(--dorado-2));} 50%{filter:drop-shadow(0 0 14px var(--dorado-2));} }
+.hero-texto{ position:relative; z-index:2; color:var(--crema-2); }
+.hero-texto .top{
+  font-family:var(--ff-body); font-weight:700; font-size:.78rem; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--dorado-2); margin-bottom:8px;
+}
+.hero-texto h2{ font-size:2.2rem; line-height:1.2; text-shadow:0 6px 20px rgba(0,0,0,.4); font-weight:400; }
+.hero-texto h2 em{ font-style:normal; color:var(--dorado-2); }
+.hero-fecha-chip{
+  display:inline-flex; gap:10px; align-items:center; margin-top:16px;
+  background:rgba(251,247,236,.14); backdrop-filter:blur(6px);
+  border:1px solid rgba(244,222,156,.5); border-radius:999px; padding:9px 16px;
+  font-weight:700; font-size:.9rem;
+}
+.scroll-cue{ margin-top:24px; color:var(--dorado-2); font-size:1.2rem; animation:rebote 1.6s ease-in-out infinite; }
+@keyframes rebote{0%,100%{transform:translateY(0);}50%{transform:translateY(8px);}}
+
+section{ padding:52px 24px 44px; position:relative; }
+.bg-crema{background:var(--crema-2);}
+.bg-noche{background:var(--noche); color:var(--crema-2);}
+.bg-noche .hechizo{background:var(--noche-2); color:var(--dorado-2); border-color:var(--dorado);}
+h2.titulo-sec{ font-size:1.9rem; margin-bottom:6px; font-weight:400; }
+.bajada{ font-family:var(--ff-body); font-weight:600; opacity:.85; margin-bottom:26px; max-width:32ch;}
+
+/* ============================================================
+   3. COUNTDOWN
+   ============================================================ */
+#countdown{ text-align:center; }
+.cd-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:8px;}
+.cd-item{
+  background:linear-gradient(160deg, var(--verde-osc), var(--noche-2));
+  border-radius:18px; padding:16px 4px; box-shadow:var(--sombra);
+  border:2px solid var(--dorado);
+}
+.cd-item .num{ font-family:var(--ff-display); font-size:2rem; color:var(--crema-2); font-variant-numeric:tabular-nums; font-weight:400;}
+.cd-item .lbl{ font-size:.64rem; letter-spacing:.1em; text-transform:uppercase; color:var(--dorado-2); font-weight:700; margin-top:2px;}
+#cd-finish{ display:none; font-family:var(--ff-display); font-size:1.4rem; color:var(--dorado-2); margin-top:10px; font-weight:400;}
+
+/* ============================================================
+   4. GALERÍA — placeholders (a la espera de fotos de Franchesca)
+   ============================================================ */
+.galeria-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:6px; }
+.galeria-item{
+  border-radius:16px; box-shadow:var(--sombra); position:relative; overflow:hidden;
+  aspect-ratio:1/1.05; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+  color:#fff; font-weight:800; text-align:center; padding:10px;
+}
+.galeria-item span.emoji{ font-size:2.1rem; }
+.galeria-item small{ font-size:.66rem; opacity:.9; font-weight:700; }
+.galeria-item:nth-child(1){ grid-column:1/3; aspect-ratio:16/11; background:linear-gradient(135deg, var(--verde), var(--verde-osc)); }
+.galeria-item:nth-child(2){ background:linear-gradient(135deg, var(--lila), var(--lila-osc)); }
+.galeria-item:nth-child(3){ background:linear-gradient(135deg, var(--dorado), #C9A24E); color:var(--noche); }
+.galeria-item:nth-child(4){ background:linear-gradient(135deg, var(--noche-2), var(--noche)); }
+.galeria-item:nth-child(5){ background:linear-gradient(135deg, var(--verde-osc), var(--lila-osc)); }
+
+/* ============================================================
+   5. DETALLES
+   ============================================================ */
+.detalle-cards{ display:grid; gap:14px; margin-top:6px; }
+.detalle-card{
+  background:var(--crema-2); border:2px solid var(--dorado); border-radius:18px;
+  padding:18px; display:flex; gap:14px; align-items:flex-start; box-shadow:var(--sombra);
+  transition:transform .25s ease;
+}
+.detalle-card:active{ transform:scale(.97); }
+.detalle-card .ico{
+  font-size:1.5rem; background:var(--verde-osc); color:#fff; width:48px; height:48px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center; flex:none;
+  animation:flotar 3s ease-in-out infinite;
+}
+.detalle-card:nth-child(2) .ico{animation-delay:.3s; background:var(--lila-osc);}
+.detalle-card:nth-child(3) .ico{animation-delay:.6s;}
+.detalle-card:nth-child(4) .ico{animation-delay:.9s; background:var(--lila-osc);}
+@keyframes flotar{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-4px) rotate(3deg);}}
+.detalle-card h3{ font-size:1rem; margin-bottom:3px; color:var(--verde-osc); font-weight:400;}
+.detalle-card p{ margin:0; font-weight:700; font-size:.9rem; line-height:1.35;}
+
+/* ============================================================
+   6. MAPA
+   ============================================================ */
+#mapa{ height:230px; border-radius:20px; overflow:hidden; box-shadow:var(--sombra); border:3px solid var(--dorado); margin-top:8px;}
+.lugar-nombre{ font-family:var(--ff-display); font-size:1.2rem; margin-top:16px; color:var(--dorado-2); font-weight:400;}
+.lugar-dir{ font-weight:700; opacity:.85; margin-top:2px;}
+.como-llegar{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:16px; }
+.como-llegar a{
+  text-align:center; background:var(--crema-2); color:var(--noche); text-decoration:none;
+  font-weight:800; font-size:.76rem; padding:12px 4px; border-radius:12px; box-shadow:var(--sombra);
+}
+
+/* ============================================================
+   7. RSVP
+   ============================================================ */
+#rsvp{ background:linear-gradient(180deg, var(--crema-2), var(--crema)); }
+.ticket{
+  background:var(--crema-2); border-radius:20px; padding:22px 20px 24px; box-shadow:var(--sombra);
+  border:2px dashed var(--verde-osc); position:relative;
+}
+.ticket::before, .ticket::after{
+  content:""; position:absolute; width:22px; height:22px; background:var(--crema-2); border-radius:50%;
+  top:50%; transform:translateY(-50%); box-shadow:inset 0 0 0 2px var(--verde-osc);
+}
+.ticket::before{ left:-13px;} .ticket::after{ right:-13px;}
+.campo{ margin-bottom:16px; }
+.campo label{ display:block; font-weight:800; font-size:.82rem; margin-bottom:6px; color:var(--verde-osc);}
+.campo input[type=text], .campo textarea{
+  width:100%; border:2px solid var(--dorado); border-radius:12px; padding:12px 14px;
+  font-family:var(--ff-body); font-weight:700; font-size:.95rem; background:#fff; color:var(--texto);
+}
+.campo textarea{ resize:vertical; min-height:64px; }
+.campo input:focus, .campo textarea:focus{ outline:3px solid var(--verde-osc); outline-offset:1px; }
+.contador-row{ display:flex; justify-content:space-between; align-items:center; }
+.stepper{ display:flex; align-items:center; gap:12px; }
+.stepper button{
+  width:34px; height:34px; border-radius:50%; background:var(--verde-osc); color:#fff; font-size:1.2rem; font-weight:800;
+}
+.stepper button:active{ background:var(--lila-osc); }
+.stepper span{ font-family:var(--ff-display); font-size:1.15rem; min-width:20px; text-align:center; font-weight:400;}
+#btn-confirmar{
+  width:100%; margin-top:6px; background:var(--dorado); color:var(--noche);
+  font-family:var(--ff-body); font-weight:800; font-size:1.02rem; padding:16px; border-radius:14px;
+  box-shadow:var(--sombra); display:flex; align-items:center; justify-content:center; gap:8px;
+}
+#rsvp-ok{
+  display:none; margin-top:14px; text-align:center; background:var(--noche); color:var(--dorado-2);
+  border-radius:14px; padding:16px; font-weight:800;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{ background:var(--noche); color:var(--crema-2); text-align:center; padding:44px 26px 34px; }
+footer .frase{ font-family:var(--ff-display); font-size:1.35rem; color:var(--dorado-2); line-height:1.4; margin-bottom:10px; font-weight:400;}
+footer .firma{ font-weight:700; opacity:.75; margin-top:18px; font-size:.78rem;}
+footer .creditos{ margin-top:22px; padding-top:18px; border-top:1px solid rgba(244,222,156,.25); display:flex; flex-direction:column; gap:7px; }
+footer .creditos a{ color:var(--dorado-2); text-decoration:none; font-weight:700; font-size:.78rem; letter-spacing:.02em; }
+footer .creditos a span.lbl{ opacity:.55; font-weight:600; }
+
+#audio-toggle{
+  position:fixed; right:16px; bottom:16px; z-index:500; width:50px; height:50px; border-radius:50%;
+  background:var(--dorado); color:var(--noche); font-size:1.25rem; box-shadow:var(--sombra);
+  display:flex; align-items:center; justify-content:center;
+}
+
+.confeti{ position:fixed; top:-10px; z-index:950; border-radius:2px; pointer-events:none; animation:caer linear forwards; }
+@keyframes caer{ to{ transform:translateY(105vh) rotate(540deg); opacity:.9; } }
+
+.reveal{ opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s ease; }
+.reveal.on{ opacity:1; transform:none; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     1. INTRO
+     ============================================================ -->
+<div id="intro">
+  <div class="polvo-magico"></div>
+  <div class="hoja izq"></div>
+  <div class="hoja der"></div>
+  <div class="intro-contenido">
+    <div class="top">Un hechizo mágico está por comenzar</div>
+    <h1>Franchesca 🧚‍♀️</h1>
+    <div class="sub">¡Cumple su primer añito!</div>
+    <button id="btn-abrir">Despertar la magia</button>
+  </div>
+</div>
+
+<audio id="audio-fondo" loop preload="none">
+  <source src="" type="audio/mpeg">
+</audio>
+<button id="audio-toggle" aria-label="Pausar o reanudar música" title="Música">🔊</button>
+
+<!-- ============================================================
+     2. HERO
+     ============================================================ -->
+<section id="hero">
+  <div class="luciernagas" id="luciernagas"></div>
+  <div class="bosque-ilustracion">
+    <div class="varita">🪄</div>
+    <div class="hongo h1"><div class="sombrero"></div><div class="tallo"></div></div>
+    <div class="hongo h2"><div class="sombrero"></div><div class="tallo"></div></div>
+    <div class="hongo h3"><div class="sombrero"></div><div class="tallo"></div></div>
+  </div>
+  <div class="hero-texto">
+    <div class="top">1er cumpleaños · Un cuento de hadas</div>
+    <h2>Franchesca despierta<br>la <em>magia</em> del bosque 🍄</h2>
+    <div class="hero-fecha-chip" id="chip-fecha">📅 Sáb 12 de sept · 15 a 18 hs</div>
+  </div>
+  <div class="scroll-cue">⌄</div>
+</section>
+
+<div class="banderines"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+<!-- ============================================================
+     3. COUNTDOWN
+     ============================================================ -->
+<section id="countdown" class="bg-noche reveal">
+  <span class="hechizo">Hechizo II · La cuenta regresiva</span>
+  <h2 class="titulo-sec">Faltan…</h2>
+  <p class="bajada" style="margin-inline:auto;">para que el bosque encantado abra sus puertas.</p>
+  <div class="cd-grid">
+    <div class="cd-item"><div class="num" id="cd-d">00</div><div class="lbl">Días</div></div>
+    <div class="cd-item"><div class="num" id="cd-h">00</div><div class="lbl">Horas</div></div>
+    <div class="cd-item"><div class="num" id="cd-m">00</div><div class="lbl">Min</div></div>
+    <div class="cd-item"><div class="num" id="cd-s">00</div><div class="lbl">Seg</div></div>
+  </div>
+  <div id="cd-finish">🎉 ¡Llegó el gran día de Franchesca! 🎉</div>
+</section>
+
+<div class="banderines"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+<!-- ============================================================
+     4. GALERÍA (placeholders — a la espera de fotos de Franchesca)
+     ============================================================ -->
+<section id="galeria" class="bg-crema reveal">
+  <span class="hechizo">Hechizo III · Álbum encantado</span>
+  <h2 class="titulo-sec">Momentos de Franchesca</h2>
+  <p class="bajada">Acá van a ir las fotos de la festejada — reemplazá estos espacios por las tuyas.</p>
+  <div class="galeria-grid" id="galeria-grid"></div>
+</section>
+
+<!-- ============================================================
+     5. DETALLES
+     ============================================================ -->
+<section id="detalles" class="bg-crema reveal">
+  <span class="hechizo">Hechizo IV · Datos del hechizo</span>
+  <h2 class="titulo-sec">Toda la info</h2>
+  <div class="detalle-cards">
+    <div class="detalle-card"><div class="ico">📅</div><div><h3>Fecha</h3><p>Sábado 12 de septiembre</p></div></div>
+    <div class="detalle-card"><div class="ico">🕒</div><div><h3>Horario</h3><p>De 15:00 a 18:00 hs</p></div></div>
+    <div class="detalle-card"><div class="ico">🏴‍☠️</div><div><h3>Lugar</h3><p>Salón Puerto Pirata — Luque Honorio 6367, Gregorio de Laferrère, Buenos Aires (B1757)</p></div></div>
+    <div class="detalle-card"><div class="ico">🧚</div><div><h3>Onda</h3><p>Vení con brillos y colores del bosque encantado ✨</p></div></div>
+  </div>
+</section>
+
+<div class="banderines"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+<!-- ============================================================
+     6. MAPA
+     ============================================================ -->
+<section id="ubicacion" class="bg-noche reveal">
+  <span class="hechizo">Hechizo V · Cómo llegar</span>
+  <h2 class="titulo-sec">Te esperamos en el bosque</h2>
+  <div id="mapa"></div>
+  <div class="lugar-nombre">Salón Puerto Pirata</div>
+  <div class="lugar-dir">Luque Honorio 6367, Gregorio de Laferrère, Buenos Aires · B1757</div>
+  <div class="como-llegar">
+    <a id="lnk-google" href="#" target="_blank" rel="noopener">🗺️<br>Google Maps</a>
+    <a id="lnk-waze" href="#" target="_blank" rel="noopener">🚗<br>Waze</a>
+    <a id="lnk-apple" href="#" target="_blank" rel="noopener">📍<br>Apple Maps</a>
+  </div>
+</section>
+
+<div class="banderines"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+<!-- ============================================================
+     7. RSVP
+     ============================================================ -->
+<section id="rsvp" class="reveal">
+  <span class="hechizo">Hechizo VI · Confirmá tu lugar</span>
+  <h2 class="titulo-sec">¿Vas a venir?</h2>
+  <p class="bajada">Decinos que sí para guardarte tu lugar bajo el hechizo 🎟️</p>
+
+  <div class="ticket">
+    <div class="campo">
+      <label for="f-nombre">Tu nombre</label>
+      <input type="text" id="f-nombre" placeholder="¿Quién confirma?">
+    </div>
+    <div class="campo">
+      <label>Adultos</label>
+      <div class="contador-row">
+        <span>¿Cuántos vienen?</span>
+        <div class="stepper">
+          <button type="button" data-target="adultos" data-op="-">−</button>
+          <span id="adultos">1</span>
+          <button type="button" data-target="adultos" data-op="+">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="campo">
+      <label>Niños</label>
+      <div class="contador-row">
+        <span>¿Y peques?</span>
+        <div class="stepper">
+          <button type="button" data-target="ninos" data-op="-">−</button>
+          <span id="ninos">0</span>
+          <button type="button" data-target="ninos" data-op="+">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="campo">
+      <label for="f-msg">Mensaje (opcional)</label>
+      <textarea id="f-msg" placeholder="Un saludito para Franchesca…"></textarea>
+    </div>
+    <button id="btn-confirmar">Confirmar por WhatsApp 🧚‍♀️</button>
+    <div id="rsvp-ok">¡Gracias! Ya avisamos que venís. Nos vemos en el bosque 🎉</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="frase">"Que la magia te acompañe<br>en cada paso de tu vida" 🧚‍♀️</div>
+  <div>Con todo nuestro cariño,<br>la familia de Franchesca</div>
+  <div class="firma">— El Bosque Encantado de Franchesca —</div>
+  <div class="creditos">
+    <a href="https://instagram.com/estudio_fotoinfantil" target="_blank" rel="noopener"><span class="lbl">📸 Fotos:</span> @estudio_fotoinfantil</a>
+    <a href="https://wa.me/5491130448139" target="_blank" rel="noopener"><span class="lbl">💬 WhatsApp:</span> +54 9 11 3044-8139</a>
+    <a href="https://instagram.com/Novainvite.co" target="_blank" rel="noopener"><span class="lbl">🎪 Invitación digital:</span> @Novainvite.co</a>
+  </div>
+</footer>
+
+<!-- ============================================================
+     JS
+     ============================================================ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* ============================================================
+   CONFIG — editá acá para personalizar (fecha, fotos, etc.)
+   ============================================================ */
+const CONFIG = {
+  fechaEvento: "2026-09-12T15:00:00-03:00",
+  whatsapp: "5491134364546",
+  lat: -34.75140027511901,
+  lng: -58.58246881408983,
+  // Sin fotos todavía: cuando las tengas, agregalas acá como URLs y reemplazá
+  // el bloque de "galería placeholder" del JS por <img> como en las otras invitaciones.
+  galeria: []
+};
+
+/* ---------- Luciérnagas decorativas del hero ---------- */
+const cieloLuciernagas = document.getElementById('luciernagas');
+for (let i=0;i<18;i++){
+  const s = document.createElement('span');
+  s.style.left = Math.random()*100 + '%';
+  s.style.top = Math.random()*70 + '%';
+  s.style.animationDelay = (Math.random()*2.4) + 's';
+  cieloLuciernagas.appendChild(s);
+}
+
+/* ---------- Intro: abrir bosque + audio ---------- */
+const intro = document.getElementById('intro');
+const audio = document.getElementById('audio-fondo');
+const audioToggle = document.getElementById('audio-toggle');
+let audioOn = false;
+document.getElementById('btn-abrir').addEventListener('click', () => {
+  intro.classList.add('abierta');
+  if (audio.querySelector('source').getAttribute('src')) {
+    audio.play().then(() => { audioOn = true; audioToggle.textContent = '🔊'; }).catch(() => {});
+  }
+  setTimeout(() => { intro.style.display = 'none'; }, 1200);
+});
+audioToggle.addEventListener('click', () => {
+  if (!audio.querySelector('source').getAttribute('src')) return;
+  if (audioOn) { audio.pause(); audioOn = false; audioToggle.textContent = '🔇'; }
+  else { audio.play().catch(()=>{}); audioOn = true; audioToggle.textContent = '🔊'; }
+});
+if (!audio.querySelector('source').getAttribute('src')) { audioToggle.style.display = 'none'; }
+
+/* ---------- Countdown ---------- */
+const target = new Date(CONFIG.fechaEvento).getTime();
+function tickCountdown(){
+  const now = Date.now();
+  const diff = target - now;
+  if (diff <= 0){
+    document.getElementById('countdown').querySelector('.cd-grid').style.display = 'none';
+    document.getElementById('cd-finish').style.display = 'block';
+    clearInterval(cdInterval);
+    return;
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  document.getElementById('cd-d').textContent = String(d).padStart(2,'0');
+  document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
+  document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
+  document.getElementById('cd-s').textContent = String(s).padStart(2,'0');
+}
+tickCountdown();
+const cdInterval = setInterval(tickCountdown, 1000);
+
+/* ---------- Galería (placeholders decorativos) ---------- */
+const placeholders = [
+  {emoji:'🧚‍♀️', texto:'Foto principal de Franchesca'},
+  {emoji:'🍄', texto:'Foto 2'},
+  {emoji:'🦋', texto:'Foto 3'},
+  {emoji:'🌙', texto:'Foto 4'},
+  {emoji:'✨', texto:'Foto 5'}
+];
+const grid = document.getElementById('galeria-grid');
+placeholders.forEach(p => {
+  const div = document.createElement('div');
+  div.className = 'galeria-item';
+  div.innerHTML = `<span class="emoji">${p.emoji}</span><small>${p.texto}</small>`;
+  grid.appendChild(div);
+});
+
+/* ---------- Mapa ---------- */
+const map = L.map('mapa', {zoomControl:false, attributionControl:false, dragging:true, scrollWheelZoom:false})
+  .setView([CONFIG.lat, CONFIG.lng], 15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+const iconoHada = L.divIcon({
+  html: '<div style="font-size:30px; transform:translateY(-6px);">🧚‍♀️</div>',
+  className: '', iconSize:[30,30], iconAnchor:[15,24]
+});
+L.marker([CONFIG.lat, CONFIG.lng], {icon: iconoHada}).addTo(map);
+
+document.getElementById('lnk-google').href = `https://www.google.com/maps/dir/?api=1&destination=${CONFIG.lat},${CONFIG.lng}`;
+document.getElementById('lnk-waze').href = `https://waze.com/ul?ll=${CONFIG.lat},${CONFIG.lng}&navigate=yes`;
+document.getElementById('lnk-apple').href = `https://maps.apple.com/?daddr=${CONFIG.lat},${CONFIG.lng}`;
+
+/* ---------- RSVP: steppers + WhatsApp ---------- */
+document.querySelectorAll('.stepper button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = document.getElementById(btn.dataset.target);
+    let val = parseInt(t.textContent, 10);
+    const min = btn.dataset.target === 'adultos' ? 1 : 0;
+    if (btn.dataset.op === '+' ) val = Math.min(val+1, 20);
+    else val = Math.max(val-1, min);
+    t.textContent = val;
+  });
+});
+
+function lanzarConfeti(){
+  const colores = ['#5FA980','#E9C767','#B79FE0','#372C63','#FBF7EC'];
+  for (let i=0;i<40;i++){
+    const c = document.createElement('div');
+    c.className='confeti';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.width = c.style.height = (5+Math.random()*6)+'px';
+    c.style.background = colores[Math.floor(Math.random()*colores.length)];
+    c.style.animationDuration = (2.2+Math.random()*1.6)+'s';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 4000);
+  }
+}
+
+document.getElementById('btn-confirmar').addEventListener('click', () => {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const adultos = document.getElementById('adultos').textContent;
+  const ninos = document.getElementById('ninos').textContent;
+  const msg = document.getElementById('f-msg').value.trim();
+  if (!nombre){
+    document.getElementById('f-nombre').focus();
+    document.getElementById('f-nombre').style.outline = '3px solid #7C5CB0';
+    return;
+  }
+  let texto = `¡Hola! Soy ${nombre} y confirmo mi asistencia al primer añito de Franchesca 🧚‍♀️ Vamos ${adultos} adulto(s)`;
+  if (parseInt(ninos,10) > 0) texto += ` y ${ninos} niño(s)`;
+  texto += '.';
+  if (msg) texto += ` Mensaje: ${msg}`;
+  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(texto)}`, '_blank');
+  document.getElementById('rsvp-ok').style.display = 'block';
+  lanzarConfeti();
+});
+
+/* ---------- Reveal on scroll ---------- */
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); });
+}, {threshold:.15});
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
