@@ -147,13 +147,13 @@ h1,h2,h3{font-family:var(--ff-display); margin:0; font-weight:400;}
 .varita{ position:absolute; top:-10px; left:50%; transform:translateX(-50%) rotate(-18deg); font-size:2.4rem; animation:brillarVarita 2s ease-in-out infinite; }
 @keyframes brillarVarita{ 0%,100%{filter:drop-shadow(0 0 2px var(--dorado-2));} 50%{filter:drop-shadow(0 0 14px var(--dorado-2));} }
 .hero-foto{
-  position:relative; z-index:2; width:190px; height:190px; margin:0 auto 18px;
-  border-radius:50%; overflow:hidden; border:4px solid var(--dorado);
+  position:relative; z-index:2; width:100%; margin:0 auto 18px;
+  border-radius:22px; overflow:hidden; border:4px solid var(--dorado);
   box-shadow:var(--sombra), 0 0 0 8px rgba(244,222,156,.16);
 }
-.hero-foto img{ width:100%; height:100%; object-fit:cover; display:block; }
+.hero-foto img{ width:100%; height:auto; display:block; }
 .hero-foto-varita{
-  position:absolute; top:-8px; right:-4px; font-size:2.1rem;
+  position:absolute; top:-14px; right:-10px; font-size:2.3rem;
   filter:drop-shadow(0 0 8px var(--dorado-2));
   animation:brillarVarita 2s ease-in-out infinite;
 }
@@ -201,16 +201,49 @@ h2.titulo-sec{ font-size:1.9rem; margin-bottom:6px; font-weight:400; }
 .galeria-item{
   border-radius:16px; box-shadow:var(--sombra); position:relative; overflow:hidden;
   aspect-ratio:1/1.05; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
-  color:#fff; font-weight:800; text-align:center; padding:10px;
+  color:#fff; font-weight:800; text-align:center; padding:10px; cursor:pointer;
 }
 .galeria-item span.emoji{ font-size:2.1rem; }
 .galeria-item small{ font-size:.66rem; opacity:.9; font-weight:700; }
 .galeria-item img{ width:100%; height:100%; object-fit:cover; display:block; }
+.galeria-item::after{
+  content:"🔍"; position:absolute; bottom:8px; right:8px; z-index:2;
+  width:28px; height:28px; border-radius:50%; background:rgba(38,33,71,.55); color:#fff;
+  font-size:.9rem; display:flex; align-items:center; justify-content:center; pointer-events:none;
+}
+.galeria-item:active{ transform:scale(.97); }
 .galeria-item:nth-child(1){ grid-column:1/3; aspect-ratio:16/11; background:linear-gradient(135deg, var(--verde), var(--verde-osc)); }
 .galeria-item:nth-child(2){ background:linear-gradient(135deg, var(--lila), var(--lila-osc)); }
 .galeria-item:nth-child(3){ background:linear-gradient(135deg, var(--dorado), #C9A24E); color:var(--noche); }
 .galeria-item:nth-child(4){ grid-column:1/3; aspect-ratio:16/11; background:linear-gradient(135deg, var(--noche-2), var(--noche)); }
 .galeria-item:nth-child(5){ background:linear-gradient(135deg, var(--verde-osc), var(--lila-osc)); }
+
+/* ============================================================
+   LIGHTBOX — ver fotos de la galería en grande
+   ============================================================ */
+.lightbox{
+  position:fixed; inset:0; z-index:1000; display:none;
+  align-items:center; justify-content:center; padding:20px;
+  background:rgba(38,33,71,.94); backdrop-filter:blur(4px);
+}
+.lightbox.abierto{ display:flex; }
+.lb-contenido{ display:flex; align-items:center; gap:10px; max-width:100%; max-height:100%; }
+.lightbox img{
+  max-width:76vw; max-height:78vh; border-radius:14px; object-fit:contain;
+  border:3px solid var(--dorado); box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.lb-cerrar{
+  position:fixed; top:18px; right:18px; z-index:1001;
+  width:42px; height:42px; border-radius:50%; background:var(--dorado); color:var(--noche);
+  font-size:1.15rem; font-weight:800; box-shadow:var(--sombra);
+  display:flex; align-items:center; justify-content:center;
+}
+.lb-nav{
+  flex:none; width:42px; height:42px; border-radius:50%;
+  background:rgba(251,247,236,.16); color:var(--crema-2); border:1.5px solid var(--dorado);
+  font-size:1.5rem; font-weight:800; display:flex; align-items:center; justify-content:center;
+}
+.lb-nav:active{ background:var(--dorado); color:var(--noche); }
 
 /* ============================================================
    5. DETALLES
@@ -469,6 +502,18 @@ footer .creditos a span.lbl{ opacity:.55; font-weight:600; }
 </footer>
 
 <!-- ============================================================
+     LIGHTBOX GALERÍA
+     ============================================================ -->
+<div id="lightbox" class="lightbox">
+  <button id="lb-cerrar" class="lb-cerrar" aria-label="Cerrar">✕</button>
+  <div class="lb-contenido">
+    <button id="lb-prev" class="lb-nav" aria-label="Foto anterior">‹</button>
+    <img id="lb-img" src="" alt="Foto de Franchesca">
+    <button id="lb-next" class="lb-nav" aria-label="Foto siguiente">›</button>
+  </div>
+</div>
+
+<!-- ============================================================
      JS
      ============================================================ -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -547,7 +592,35 @@ CONFIG.galeria.forEach((url, i) => {
   const div = document.createElement('div');
   div.className = 'galeria-item';
   div.innerHTML = `<img src="${url}" alt="Franchesca — foto ${i + 1}" loading="lazy">`;
+  div.addEventListener('click', () => abrirLightbox(i));
   grid.appendChild(div);
+});
+
+/* ---------- Lightbox: ver fotos en grande ---------- */
+const lightbox = document.getElementById('lightbox');
+const lbImg = document.getElementById('lb-img');
+let lbIndex = 0;
+function abrirLightbox(i){
+  lbIndex = i;
+  lbImg.src = CONFIG.galeria[lbIndex];
+  lightbox.classList.add('abierto');
+}
+function cerrarLightbox(){
+  lightbox.classList.remove('abierto');
+}
+function lbMover(delta){
+  lbIndex = (lbIndex + delta + CONFIG.galeria.length) % CONFIG.galeria.length;
+  lbImg.src = CONFIG.galeria[lbIndex];
+}
+document.getElementById('lb-cerrar').addEventListener('click', cerrarLightbox);
+document.getElementById('lb-prev').addEventListener('click', () => lbMover(-1));
+document.getElementById('lb-next').addEventListener('click', () => lbMover(1));
+lightbox.addEventListener('click', (e) => { if (e.target === lightbox) cerrarLightbox(); });
+document.addEventListener('keydown', (e) => {
+  if (!lightbox.classList.contains('abierto')) return;
+  if (e.key === 'Escape') cerrarLightbox();
+  if (e.key === 'ArrowLeft') lbMover(-1);
+  if (e.key === 'ArrowRight') lbMover(1);
 });
 
 /* ---------- Mapa ---------- */
